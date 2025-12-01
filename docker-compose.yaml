@@ -1,0 +1,230 @@
+services:
+  # --- Docker Management UI ---
+  portainer:
+    image: portainer/portainer-ce:lts
+    container_name: portainer
+    restart: always
+    ports:
+      - "9443:9443"
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw,z
+      - portainer_data:/data:rw,z
+    networks:
+      - app-network
+
+  # --- Expense Tracker ---
+  expenseowl:
+    image: tanq16/expenseowl:main
+    container_name: expenseowl
+    restart: unless-stopped
+    ports:
+      - "5010:8080" # External:Internal
+    volumes:
+      - /home/omkara/dockercompose/data/expenseowl_data:/app/data:rw,Z
+    environment:
+      - TZ=America/New_York
+    networks:
+      - app-network
+
+  fireflyiii:
+    image: fireflyiii/core:latest
+    container_name: fireflyiii
+    restart: unless-stopped
+    environment:
+      APP_KEY: base64:Dsz40HWwbCqnq0oxMsjq7fItmKIeBfCBGORfspaI1Kw=
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: joplindb
+      DB_USERNAME: joplin
+      DB_PASSWORD: testing123
+    volumes:
+      - /home/omkara/dockercompose/data/fireflyiii:/var/www/html/storage/upload
+    ports:
+      - "5020:8080"
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+  # --- Dashboard Homepage ---
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    user: root
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - /home/omkara/OneDrive/Attachments/homepage/:/app/config:rw,Z
+    environment:
+      - HOMEPAGE_ALLOWED_HOSTS=192.168.1.66,localhost,192.168.1.66:3000
+    networks:
+      - app-network
+
+  # --- Surveillance DVR ---
+  agentdvr:
+    image: mekayelanik/ispyagentdvr:latest
+    container_name: agentdvr
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - AGENTDVR_WEBUI_PORT=8090
+    ports:
+      - "8090:8090"
+      - "3478:3478/udp"
+      - "50000-50100:50000-50100/udp"
+    volumes:
+      - /home/omkara/OneDrive/Attachments/agentdvr/config:/AgentDVR/Media/XML:rw,Z
+      - /home/omkara/OneDrive/Attachments/agentdvr/media:/AgentDVR/Media/WebServerRoot/Media:rw,Z
+      # - ./data/agentdvr/commands:/AgentDVR/Commands/
+    networks:
+      - app-network
+
+  # # --- File Manager ---
+  filebrowser:
+    image: filebrowser/filebrowser:latest
+    container_name: filebrowser
+    restart: unless-stopped
+    ports:
+      - "7000:8080" # External:Internal (change 8081 if you want another port)
+    volumes:
+      - /home/omkara/:/srv # The directory you want to browse
+      - /home/omkara/OneDrive/Attachments/filebrowser/config:/config # Config storage
+      - /home/omkara/OneDrive/Attachments/filebrowser/database:/database # Database storage
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - FB_USERNAME=admin
+      - FB_PASSWORD=strongpassword
+    command: ["--port", "8080"]
+    networks:
+      - app-network
+
+  # --- Bookmark Manager ---
+  linkding:
+    image: sissbruecker/linkding:latest
+    container_name: linkding
+    restart: unless-stopped
+    ports:
+      - "9100:9090"
+    volumes:
+      - /home/omkara/OneDrive/Attachments/linkding:/etc/linkding/data:rw,Z
+    environment:
+      - LD_SUPERUSER_NAME=admin
+      - LD_SUPERUSER_PASSWORD='password'
+      - LD_ALLOWED_HOSTS=192.168.1.66,localhost
+    networks:
+      - app-network
+
+  # --- JupyterLab Environment ---
+  jupyter:
+    image: jupyter/scipy-notebook:latest
+    container_name: jupyter
+    restart: unless-stopped
+    ports:
+      - "5200:8888"
+    volumes:
+      - /home/omkara/OneDrive/Attachments/jupyter:/home/jovyan/work:rw,Z
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    networks:
+      - app-network
+
+  # --- memos ---
+  memos:
+    image: neosmemo/memos:latest
+    container_name: memos
+    ports:
+      - "5400:5230"
+    volumes:
+      - /home/omkara/OneDrive/Attachments/memos:/var/opt/memos:rw,Z
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  bentopdf:
+    image: bentopdf/bentopdf:latest
+    container_name: bentopdf
+    ports:
+      - "5500:8080"
+    restart: unless-stopped
+
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: audiobookshelf
+    ports:
+      - 9200:80 # External port 13378 maps to internal port 80
+    volumes:
+      - /home/omkara/OneDrive/Attachments/audiobookshelf/:/audiobooks:rw,Z
+      - /home/omkara/OneDrive/Attachments/audiobookshelf/:/podcasts:rw,Z
+      - /home/omkara/OneDrive/Attachments/audiobookshelf/:/metadata:rw,Z
+      - /home/omkara/OneDrive/Attachments/audiobookshelf/:/config:rw,Z
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: unless-stopped
+    volumes:
+      - /home/omkara/OneDrive/Attachments/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=testing123
+      - POSTGRES_USER=joplin
+      - POSTGRES_DB=joplindb
+    networks:
+      - app-network
+
+  # --- Reverse Proxy / SSL ---
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: npm
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "8443:443"
+      - "8181:81"
+    volumes:
+      - npm_data:/data:rw,z
+      - npm_letsencrypt:/etc/letsencrypt
+    networks:
+      - app-network
+
+  # --- Auto Updater ---
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:rw,z
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=300 # every 5 min
+      - WATCHTOWER_LABEL_ENABLE=true
+
+# --- Named Volumes ---
+volumes:
+  portainer_data: {}
+  npm_data: {}
+  npm_letsencrypt: {}
+
+# --- Shared Network ---
+networks:
+  app-network:
+    driver: bridge
+#UPDATE users
+# SET password = '$2y$04$ozPQcHvd8uvEYL9g4Baylu0Kf31TCb9DyxNcZMOkxZlbfBhHuOqDO', --password
+#     updated_time = extract(epoch from now())*1000
+# WHERE email = 'admin@localhost'; admin@example.com e+<7sVg.BR
+
+#docker run --rm -v /home/omkara/OneDrive/Attachments/filebrowser/database:/database \
+# filebrowser/filebrowser:latest \
+# users update admin --password strongpassword --database /database/filebrowser.db
+
+# docker-compose down && docker-compose up -d
