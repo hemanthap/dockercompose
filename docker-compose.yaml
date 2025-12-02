@@ -40,7 +40,7 @@ services:
       DB_USERNAME: joplin
       DB_PASSWORD: testing123
     volumes:
-      - /home/omkara/dockercompose/data/fireflyiii:/var/www/html/storage/upload
+      - /home/omkara/OneDrive/Attachments/fireflyiii:/var/www/html/storage/upload
     ports:
       - "5020:8080"
     depends_on:
