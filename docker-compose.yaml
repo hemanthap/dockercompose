@@ -177,7 +177,8 @@ services:
     container_name: wg-easy
     environment:
       # Replace with your actual external IP or DNS name
-      - WG_HOST=24.45.86.133
+      #- WG_HOST=24.45.86.133
+      - WG_HOST=omkara.ddns.net
       # The port WireGuard listens on (default is 51820 UDP)
       - WG_PORT=51820
       # The password for the web UI (MANDATORY: change this!)
@@ -206,7 +207,7 @@ services:
     restart: unless-stopped
 
   # --- Reverse Proxy / SSL ---
-  nginx-proxy-manager:
+  npm:
     image: jc21/nginx-proxy-manager:latest
     container_name: npm
     restart: unless-stopped
@@ -217,6 +218,11 @@ services:
     volumes:
       - npm_data:/data:rw,z
       - npm_letsencrypt:/etc/letsencrypt
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - app-network
 
@@ -232,6 +238,18 @@ services:
       - WATCHTOWER_POLL_INTERVAL=36000 # every 5 min
       - WATCHTOWER_LABEL_ENABLE=true
 
+  noip:
+    image: ghcr.io/noipcom/noip-duc:latest
+    container_name: noip
+    restart: unless-stopped
+    networks:
+      - app-network
+    environment:
+      NOIP_USERNAME: vngnq4h
+      NOIP_PASSWORD: 4ZXCcjj2ZUyX
+      NOIP_HOSTNAMES: omkara.ddns.net
+    volumes:
+      - /home/omkara/OneDrive/Attachments/noip:/data
 # --- Named Volumes ---
 volumes:
   portainer_data: {}
