@@ -1,37 +1,33 @@
 services:
   # --- Docker Management UI ---
   portainer:
-    image: portainer/portainer-ce:lts
+    image: portainer/portainer-ce:latest
     container_name: portainer
     restart: always
     ports:
       - "9443:9443"
       - "9000:9000"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:rw,z
+      - /run/user/1000/podman/podman.sock:/var/run/docker.sock:rw,z
       - portainer_data:/data:rw,z
     networks:
       - app-network
 
-  # --- fireflyiii ---
+    # --- fireflyiii ---
   fireflyiii:
     image: fireflyiii/core:latest
     container_name: fireflyiii
     restart: unless-stopped
     environment:
       APP_KEY: base64:Dsz40HWwbCqnq0oxMsjq7fItmKIeBfCBGORfspaI1Kw=
-      DB_CONNECTION: pgsql
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_DATABASE: joplindb
-      DB_USERNAME: joplin
-      DB_PASSWORD: testing123
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /var/www/html/storage/database.sqlite
+      TRUSTED_PROXIES: "**"
+      APP_URL: http://192.168.1.252:5020
     volumes:
-      - /home/omkara/dockerdata/fireflyiii:/var/www/html/storage/upload
+      - /home/omkara/dockerdata/fireflyiii:/var/www/html/storage:z
     ports:
       - "5020:8080"
-    depends_on:
-      - postgres
     networks:
       - app-network
 
@@ -44,9 +40,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /home/omkara/dockerdata/homepage/:/app/config:rw,Z
+      - /home/omkara/dockerdata/homepage/:/app/config:rw,z
     environment:
-      - HOMEPAGE_ALLOWED_HOSTS=192.168.1.66,localhost,192.168.1.66:3000
+      - HOMEPAGE_ALLOWED_HOSTS=192.168.1.252,localhost,192.168.1.252:3000
     networks:
       - app-network
 
@@ -65,8 +61,8 @@ services:
       - "3478:3478/udp"
       - "50000-50100:50000-50100/udp"
     volumes:
-      - /home/omkara/dockerdata/agentdvr/config:/AgentDVR/Media/XML:rw,Z
-      - /home/omkara/dockerdata/agentdvr/media:/AgentDVR/Media/WebServerRoot/Media:rw,Z
+      - /home/omkara/dockerdata/agentdvr/config:/AgentDVR/Media/XML:rw,z
+      - /home/omkara/dockerdata/agentdvr/media:/AgentDVR/Media/WebServerRoot/Media:rw,z
       # - ./data/agentdvr/commands:/AgentDVR/Commands/
     networks:
       - app-network
@@ -80,8 +76,8 @@ services:
       - "7000:8080" # External:Internal (change 8081 if you want another port)
     volumes:
       - /home/omkara/:/srv # The directory you want to browse
-      - /home/omkara/dockerdata/filebrowser/config:/config # Config storage
-      - /home/omkara/dockerdata/filebrowser/database:/database # Database storage
+      - /home/omkara/dockerdata/filebrowser/config:/config:z # Config storage
+      - /home/omkara/dockerdata/filebrowser/database:/database:z # Database storage
     environment:
       - PUID=1000
       - PGID=1000
@@ -100,11 +96,11 @@ services:
     ports:
       - "9100:9090"
     volumes:
-      - /home/omkara/dockerdata/linkding:/etc/linkding/data:rw,Z
+      - /home/omkara/dockerdata/linkding:/etc/linkding/data:rw,z
     environment:
       - LD_SUPERUSER_NAME=admin
       - LD_SUPERUSER_PASSWORD='password'
-      - LD_ALLOWED_HOSTS=192.168.1.66,localhost
+      - LD_ALLOWED_HOSTS=192.168.1.252,localhost
     networks:
       - app-network
 
@@ -116,7 +112,7 @@ services:
     ports:
       - "5200:8888"
     volumes:
-      - /home/omkara/dockerdata/jupyter:/home/jovyan/work:rw,Z
+      - /home/omkara/dockerdata/jupyter:/home/jovyan/work:rw,z
     environment:
       - JUPYTER_ENABLE_LAB=yes
     networks:
@@ -129,7 +125,7 @@ services:
     ports:
       - "5400:5230"
     volumes:
-      - /home/omkara/dockerdata/memos:/var/opt/memos:rw,Z
+      - /home/omkara/dockerdata/memos:/var/opt/memos:rw,z
     restart: unless-stopped
     networks:
       - app-network
@@ -149,27 +145,11 @@ services:
     ports:
       - 9200:80 # External port 13378 maps to internal port 80
     volumes:
-      - /home/omkara/dockerdata/audiobookshelf/:/audiobooks:rw,Z
-      - /home/omkara/dockerdata/audiobookshelf/:/podcasts:rw,Z
-      - /home/omkara/dockerdata/audiobookshelf/:/metadata:rw,Z
-      - /home/omkara/dockerdata/audiobookshelf/:/config:rw,Z
+      - /home/omkara/dockerdata/audiobookshelf/:/audiobooks:rw,z
+      - /home/omkara/dockerdata/audiobookshelf/:/podcasts:rw,z
+      - /home/omkara/dockerdata/audiobookshelf/:/metadata:rw,z
+      - /home/omkara/dockerdata/audiobookshelf/:/config:rw,z
     restart: unless-stopped
-
-  # --- postgres ---
-  postgres:
-    image: postgres:16
-    container_name: postgres
-    restart: unless-stopped
-    volumes:
-      - /home/omkara/dockerdata/postgres:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_PASSWORD=testing123
-      - POSTGRES_USER=joplin
-      - POSTGRES_DB=joplindb
-    networks:
-      - app-network
 
   # --- wireguard ---
   wg-easy:
@@ -190,7 +170,7 @@ services:
       - WEB_PORT=51821
     volumes:
       # Persistence for config and data
-      - /home/omkara/dockerdata/wireguard:/etc/wireguard
+      - /home/omkara/dockerdata/wireguard:/etc/wireguard:z
     ports:
       # WireGuard UDP port
       - 51820:51820/udp
@@ -217,7 +197,7 @@ services:
       - "8181:81"
     volumes:
       - npm_data:/data:rw,z
-      - npm_letsencrypt:/etc/letsencrypt
+      - npm_letsencrypt:/etc/letsencrypt:z
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
@@ -249,7 +229,7 @@ services:
       NOIP_PASSWORD: 4ZXCcjj2ZUyX
       NOIP_HOSTNAMES: omkara.ddns.net
     volumes:
-      - /home/omkara/dockerdata/noip:/data
+      - /home/omkara/dockerdata/noip:/data:z
 # --- Named Volumes ---
 volumes:
   portainer_data: {}
