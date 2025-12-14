@@ -156,34 +156,30 @@ services:
     image: ghcr.io/wg-easy/wg-easy:latest
     container_name: wg-easy
     environment:
-      # Replace with your actual external IP or DNS name
-      #- WG_HOST=24.45.86.133
       - WG_HOST=omkara.ddns.net
-      # The port WireGuard listens on (default is 51820 UDP)
       - WG_PORT=51820
-      # The password for the web UI (MANDATORY: change this!)
       - PASSWORD_HASH=$2a$12$3JNcIcw0Kn0KSmheAnIsU.pRgGPeGLs7X3.jNrKKvGghOSnQvuFQC
-      # The internal VPN subnet
       - WG_DEFAULT_ADDRESS=10.8.1.1
       - WG_DEFAULT_DNS=1.1.1.1
-      # Optional: set a different web UI port if 51821 is in use
       - WEB_PORT=51821
+      - IPTABLES_BACKEND=nft
     volumes:
-      # Persistence for config and data
       - /home/omkara/dockerdata/wireguard:/etc/wireguard:z
-    ports:
-      # WireGuard UDP port
-      - 51820:51820/udp
-      # Web UI TCP port
-      - 51821:51821/tcp
+    devices:
+      - /dev/net/tun:/dev/net/tun
     cap_add:
-      # Required for WireGuard to manage network interfaces
       - NET_ADMIN
       - SYS_MODULE
-    # sysctls:
-    #   # Required for kernel-level IP forwarding
-    #   - net.ipv4.ip_forward=1
-    network_mode: host
+    ports:
+      # Map external WireGuard port (UDP)
+      - 51820:51820/udp
+      # Map external Web UI port (TCP)
+      - 51821:51821/tcp
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+    privileged: true
+    # network_mode: host
     restart: unless-stopped
 
   # --- Reverse Proxy / SSL ---
@@ -206,17 +202,17 @@ services:
     networks:
       - app-network
 
-  # --- Auto Updater ---
-  watchtower:
-    image: containrrr/watchtower
-    container_name: watchtower
-    restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:rw,z
-    environment:
-      - WATCHTOWER_CLEANUP=true
-      - WATCHTOWER_POLL_INTERVAL=36000 # every 5 min
-      - WATCHTOWER_LABEL_ENABLE=true
+  # # --- Auto Updater ---
+  # watchtower:
+  #   image: containrrr/watchtower
+  #   container_name: watchtower
+  #   restart: always
+  #   volumes:
+  #     - /run/user/1000/podman/podman.sock:/var/run/docker.sock:rw,z
+  #   environment:
+  #     - WATCHTOWER_CLEANUP=true
+  #     - WATCHTOWER_POLL_INTERVAL=36000 # every 5 min
+  #     - WATCHTOWER_LABEL_ENABLE=true
 
   noip:
     image: ghcr.io/noipcom/noip-duc:latest
@@ -240,6 +236,7 @@ volumes:
 networks:
   app-network:
     driver: bridge
+
 #UPDATE users
 # SET password = '$2y$04$ozPQcHvd8uvEYL9g4Baylu0Kf31TCb9DyxNcZMOkxZlbfBhHuOqDO', --password
 #     updated_time = extract(epoch from now())*1000
