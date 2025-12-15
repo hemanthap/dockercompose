@@ -1,35 +1,17 @@
 services:
   # --- Docker Management UI ---
-  portainer:
-    image: portainer/portainer-ce:latest
-    container_name: portainer
-    restart: always
-    ports:
-      - "9443:9443"
-      - "9000:9000"
-    volumes:
-      - /run/user/1000/podman/podman.sock:/var/run/docker.sock:rw,z
-      - portainer_data:/data:rw,z
-    networks:
-      - app-network
-
-    # --- fireflyiii ---
-  fireflyiii:
-    image: fireflyiii/core:latest
-    container_name: fireflyiii
-    restart: unless-stopped
-    environment:
-      APP_KEY: base64:Dsz40HWwbCqnq0oxMsjq7fItmKIeBfCBGORfspaI1Kw=
-      DB_CONNECTION: sqlite
-      DB_DATABASE: /var/www/html/storage/database.sqlite
-      TRUSTED_PROXIES: "**"
-      APP_URL: http://192.168.1.252:5020
-    volumes:
-      - /home/omkara/dockerdata/fireflyiii:/var/www/html/storage:z
-    ports:
-      - "5020:8080"
-    networks:
-      - app-network
+  # portainer:
+  #   image: portainer/portainer-ce:latest
+  #   container_name: portainer
+  #   restart: always
+  #   ports:
+  #     - "9443:9443"
+  #     - "9000:9000"
+  #   volumes:
+  #     - /run/user/1000/podman/podman.sock:/var/run/docker.sock:rw,z
+  #     - portainer_data:/data:rw,z
+  #   networks:
+  #     - app-network
 
   # --- Dashboard Homepage ---
   homepage:
@@ -87,6 +69,26 @@ services:
     command: ["--port", "8080"]
     networks:
       - app-network
+
+  firefly:
+    image: fireflyiii/core:latest
+    container_name: firefly
+    ports:
+      - "5020:8080"
+    volumes:
+      - /home/omkara/dockerdata/firefly/upload:/var/www/html/storage/upload
+      - /home/omkara/dockerdata/firefly/db/:/var/www/html/storage/database
+    environment:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /var/www/html/storage/database/database.sqlite
+      PULSE_ENTRYPOINT_USER: root
+      # 1. Provide the key under the standard Laravel variable
+      APP_KEY: Z4hT5uC8vF0wE6sM1qL7zO8nX9yA2bC=
+      # 2. Specify the cipher to avoid negotiation/mismatch errors
+      APP_CIPHER: aes-128-cbc
+      DISABLE_CONFIG_CACHE: true
+    security_opt:
+      - label:disable
 
   # --- Bookmark Manager ---
   linkding:
