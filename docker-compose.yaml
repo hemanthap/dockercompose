@@ -77,9 +77,8 @@ services:
     ports:
       - "5020:5006"
     volumes:
-      - /home/omkara/dockerdata/actualbudget:/app/data:z
+      - /home/omkara/dockerdata/actualbudget:/root/.actual:z
     environment:
-      # The app listens on 5006, which is now correctly mapped
       - ACTUAL_PORT=5006
       - TZ=America/New_York
 
@@ -99,19 +98,22 @@ services:
     networks:
       - app-network
 
-  # --- JupyterLab Environment ---
-  jupyter:
-    image: jupyter/scipy-notebook:latest
-    container_name: jupyter
-    restart: unless-stopped
-    ports:
-      - "5200:8888"
-    volumes:
-      - /home/omkara/dockerdata/jupyter:/home/jovyan/work:rw,z
-    environment:
-      - JUPYTER_ENABLE_LAB=yes
-    networks:
-      - app-network
+  # # --- JupyterLab Environment ---
+  # jupyter:
+  #   image: jupyter/scipy-notebook:latest
+  #   container_name: jupyter
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5200:8888"
+  #   volumes:
+  #     - /home/omkara/dockerdata/jupyter:/home/jovyan:rw,z
+  #   environment:
+  #     - JUPYTER_ENABLE_LAB=yes
+  #     - JUPYTER_RUNTIME_DIR=/home/jovyan/.local/share/jupyter/runtime
+  #   group_add:
+  #     - users
+  #   networks:
+  #     - app-network
 
   # --- memos ---
   memos:
@@ -129,6 +131,11 @@ services:
   bentopdf:
     image: bentopdf/bentopdf:latest
     container_name: bentopdf
+    volumes:
+      - /home/omkara/dockerdata/bentopdf/cache:/var/cache/nginx:z
+      - /home/omkara/dockerdata/bentopdf/tmp:/etc/nginx/tmp:z
+      - /home/omkara/dockerdata/bentopdf/run:/run:z
+      - /home/omkara/dockerdata/bentopdf/nginx.conf:/etc/nginx/nginx.conf:z
     ports:
       - "5500:8080"
     restart: unless-stopped
