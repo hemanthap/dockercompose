@@ -1,18 +1,4 @@
 services:
-  # --- Docker Management UI ---
-  # portainer:
-  #   image: portainer/portainer-ce:latest
-  #   container_name: portainer
-  #   restart: always
-  #   ports:
-  #     - "9443:9443"
-  #     - "9000:9000"
-  #   volumes:
-  #     - /run/user/1000/podman/podman.sock:/var/run/docker.sock:rw,z
-  #     - portainer_data:/data:rw,z
-  #   networks:
-  #     - app-network
-
   # --- Dashboard Homepage ---
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
@@ -25,8 +11,6 @@ services:
       - /home/omkara/dockerdata/homepage/:/app/config:rw,z
     environment:
       - HOMEPAGE_ALLOWED_HOSTS=192.168.1.252,localhost,192.168.1.252:3000
-    networks:
-      - app-network
 
   # --- Surveillance DVR ---
   agentdvr:
@@ -45,9 +29,6 @@ services:
     volumes:
       - /home/omkara/dockerdata/agentdvr/config:/AgentDVR/Media/XML:rw,z
       - /home/omkara/dockerdata/agentdvr/media:/AgentDVR/Media/WebServerRoot/Media:rw,z
-      # - ./data/agentdvr/commands:/AgentDVR/Commands/
-    networks:
-      - app-network
 
   #  --- File Manager ---
   filebrowser:
@@ -67,8 +48,6 @@ services:
       - FB_USERNAME=admin
       - FB_PASSWORD=strongpassword
     command: ["--port", "8080"]
-    networks:
-      - app-network
 
   actualbudget:
     image: actualbudget/actual-server:latest
@@ -95,8 +74,6 @@ services:
       - LD_SUPERUSER_NAME=admin
       - LD_SUPERUSER_PASSWORD='password'
       - LD_ALLOWED_HOSTS=192.168.1.252,localhost
-    networks:
-      - app-network
 
   # # --- JupyterLab Environment ---
   # jupyter:
@@ -124,8 +101,6 @@ services:
     volumes:
       - /home/omkara/dockerdata/memos:/var/opt/memos:rw,z
     restart: unless-stopped
-    networks:
-      - app-network
 
   # --- bentopdf ---
   bentopdf:
@@ -153,36 +128,32 @@ services:
       - /home/omkara/dockerdata/audiobookshelf/:/config:rw,z
     restart: unless-stopped
 
-  # --- wireguard ---
-  wg-easy:
-    image: ghcr.io/wg-easy/wg-easy:latest
-    container_name: wg-easy
-    environment:
-      - WG_HOST=omkara.ddns.net
-      - WG_PORT=51820
-      - PASSWORD_HASH=$2a$12$3JNcIcw0Kn0KSmheAnIsU.pRgGPeGLs7X3.jNrKKvGghOSnQvuFQC
-      - WG_DEFAULT_ADDRESS=10.8.1.1
-      - WG_DEFAULT_DNS=1.1.1.1
-      - WEB_PORT=51821
-      - IPTABLES_BACKEND=nft
-    volumes:
-      - /home/omkara/dockerdata/wireguard:/etc/wireguard:z
-    devices:
-      - /dev/net/tun:/dev/net/tun
+  wireguard:
+    image: lscr.io/linuxserver/wireguard:latest
+    container_name: wireguard
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
+      - NET_RAW # Critical for Fedora to allow iptables inside the container
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - SERVERURL=omkara.ddns.net
+      - SERVERPORT=51820
+      - PEERS=1
+      - PEERDNS=auto
+      - INTERNAL_SUBNET=10.8.1.1
+      - ALLOWEDIPS=0.0.0.0/0,10.8.1.0/24,192.168.1.0/24
+    volumes:
+      - /home/omkara/dockerdata/wireguard:/config:Z # The :Z is mandatory for SELinux on Fedora
+      - /lib/modules:/lib/modules:ro
     ports:
-      # Map external WireGuard port (UDP)
       - 51820:51820/udp
-      # Map external Web UI port (TCP)
-      - 51821:51821/tcp
     sysctls:
-      - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.src_valid_mark=1
-    privileged: true
-    # network_mode: host
-    restart: unless-stopped
+      - net.ipv4.ip_forward=1
+    restart: always
 
   # --- Reverse Proxy / SSL ---
   npm:
@@ -201,8 +172,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    networks:
-      - app-network
 
   # # --- Auto Updater ---
   # watchtower:
@@ -220,8 +189,6 @@ services:
     image: ghcr.io/noipcom/noip-duc:latest
     container_name: noip
     restart: unless-stopped
-    networks:
-      - app-network
     environment:
       NOIP_USERNAME: vngnq4h
       NOIP_PASSWORD: 4ZXCcjj2ZUyX
@@ -230,14 +197,8 @@ services:
       - /home/omkara/dockerdata/noip:/data:z
 # --- Named Volumes ---
 volumes:
-  portainer_data: {}
   npm_data: {}
   npm_letsencrypt: {}
-
-# --- Shared Network ---
-networks:
-  app-network:
-    driver: bridge
 
 #UPDATE users
 # SET password = '$2y$04$ozPQcHvd8uvEYL9g4Baylu0Kf31TCb9DyxNcZMOkxZlbfBhHuOqDO', --password
@@ -247,5 +208,7 @@ networks:
 #docker run --rm -v /home/omkara/dockerdata/filebrowser/database:/database \
 # filebrowser/filebrowser:latest \
 # users update admin --password strongpassword --database /database/filebrowser.db
+
+#podman exec -it wireguard /app/show-peer 1
 
 # docker-compose down && docker-compose up -d
