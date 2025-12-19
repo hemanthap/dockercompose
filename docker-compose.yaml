@@ -131,10 +131,11 @@ services:
   wireguard:
     image: lscr.io/linuxserver/wireguard:latest
     container_name: wireguard
+    network_mode: host
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
-      - NET_RAW # Critical for Fedora to allow iptables inside the container
+      - NET_RAW
     environment:
       - PUID=1000
       - PGID=1000
@@ -144,15 +145,10 @@ services:
       - PEERS=1
       - PEERDNS=auto
       - INTERNAL_SUBNET=10.8.1.1
-      - ALLOWEDIPS=0.0.0.0/0,10.8.1.0/24,192.168.1.0/24
+      - ALLOWEDIPS=0.0.0.0/0,192.168.1.0/24
     volumes:
-      - /home/omkara/dockerdata/wireguard:/config:Z # The :Z is mandatory for SELinux on Fedora
+      - /home/omkara/dockerdata/wireguard:/config:Z
       - /lib/modules:/lib/modules:ro
-    ports:
-      - 51820:51820/udp
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1
-      - net.ipv4.ip_forward=1
     restart: always
 
   # --- Reverse Proxy / SSL ---
