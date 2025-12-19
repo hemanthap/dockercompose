@@ -38,9 +38,9 @@ services:
     ports:
       - "7000:8080" # External:Internal (change 8081 if you want another port)
     volumes:
-      - /home/omkara/:/srv # The directory you want to browse
-      - /home/omkara/dockerdata/filebrowser/config:/config:z # Config storage
-      - /home/omkara/dockerdata/filebrowser/database:/database:z # Database storage
+      - /home/omkara/:/srv:ro # The directory you want to browse
+      - /home/omkara/dockerdata/filebrowser/config:/config:Z # Config storage
+      - /home/omkara/dockerdata/filebrowser/database:/database:Z # Database storage
     environment:
       - PUID=1000
       - PGID=1000
@@ -128,28 +128,28 @@ services:
       - /home/omkara/dockerdata/audiobookshelf/:/config:rw,z
     restart: unless-stopped
 
-  wireguard:
-    image: lscr.io/linuxserver/wireguard:latest
-    container_name: wireguard
-    network_mode: host
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
-      - NET_RAW
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
-      - SERVERURL=omkara.ddns.net
-      - SERVERPORT=51820
-      - PEERS=1
-      - PEERDNS=auto
-      - INTERNAL_SUBNET=10.8.1.1
-      - ALLOWEDIPS=0.0.0.0/0,192.168.1.0/24
-    volumes:
-      - /home/omkara/dockerdata/wireguard:/config:Z
-      - /lib/modules:/lib/modules:ro
-    restart: always
+  # wireguard:
+  #   image: lscr.io/linuxserver/wireguard:latest
+  #   container_name: wireguard
+  #   network_mode: host
+  #   cap_add:
+  #     - NET_ADMIN
+  #     - SYS_MODULE
+  #     - NET_RAW
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Etc/UTC
+  #     - SERVERURL=omkara.ddns.net
+  #     - SERVERPORT=51820
+  #     - PEERS=1
+  #     - PEERDNS=auto
+  #     - INTERNAL_SUBNET=10.8.1.1
+  #     - ALLOWEDIPS=0.0.0.0/0,192.168.1.0/24
+  #   volumes:
+  #     - /home/omkara/dockerdata/wireguard:/config:Z
+  #     - /lib/modules:/lib/modules:ro
+  #   restart: always
 
   # --- Reverse Proxy / SSL ---
   npm:
