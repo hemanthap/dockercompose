@@ -116,11 +116,12 @@ services:
   bentopdf:
     image: bentopdf/bentopdf:latest
     container_name: bentopdf
+    user: root
     volumes:
-      - /srv/dockerdata/bentopdf/cache:/var/cache/nginx:z
-      - /srv/dockerdata/bentopdf/tmp:/etc/nginx/tmp:z
-      - /srv/dockerdata/bentopdf/run:/run:z
-      - /srv/dockerdata/bentopdf/nginx.conf:/etc/nginx/nginx.conf:z
+      - bentopdf_cache:/var/cache/nginx:z
+      - bentopdf_tmp:/etc/nginx/tmp:z
+      - bentopdf_run:/run:z
+      - /srv/dockerdata/bentopdf/nginx.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "5500:8080"
     restart: unless-stopped
@@ -209,6 +210,9 @@ services:
 volumes:
   npm_data: {}
   npm_letsencrypt: {}
+  bentopdf_cache:
+  bentopdf_tmp:
+  bentopdf_run:
 
 #UPDATE users
 # SET password = '$2y$04$ozPQcHvd8uvEYL9g4Baylu0Kf31TCb9DyxNcZMOkxZlbfBhHuOqDO', --password
