@@ -12,23 +12,23 @@ services:
     environment:
       - HOMEPAGE_ALLOWED_HOSTS=192.168.1.252,localhost,192.168.1.252:3000
 
-  # --- Surveillance DVR ---
-  agentdvr:
-    image: mekayelanik/ispyagentdvr:latest
-    container_name: agentdvr
-    restart: unless-stopped
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=America/New_York
-      - AGENTDVR_WEBUI_PORT=8090
-    ports:
-      - "8090:8090"
-      - "3478:3478/udp"
-      - "50000-50100:50000-50100/udp"
-    volumes:
-      - /srv/dockerdata/agentdvr/config:/AgentDVR/Media/XML:rw,z
-      - /srv/dockerdata/agentdvr/media:/AgentDVR/Media/WebServerRoot/Media:rw,z
+  # # --- Surveillance DVR ---
+  # agentdvr:
+  #   image: mekayelanik/ispyagentdvr:latest
+  #   container_name: agentdvr
+  #   restart: unless-stopped
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=America/New_York
+  #     - AGENTDVR_WEBUI_PORT=8090
+  #   ports:
+  #     - "8090:8090"
+  #     - "3478:3478/udp"
+  #     - "50000-50100:50000-50100/udp"
+  #   volumes:
+  #     - /srv/dockerdata/agentdvr/config:/AgentDVR/Media/XML:rw,z
+  #     - /srv/dockerdata/agentdvr/media:/AgentDVR/Media/WebServerRoot/Media:rw,z
 
   #  --- File Manager ---
   filebrowser:
@@ -85,22 +85,23 @@ services:
       - LD_SUPERUSER_PASSWORD='password'
       - LD_ALLOWED_HOSTS=192.168.1.252,localhost
 
-  # # --- JupyterLab Environment ---
-  # jupyter:
-  #   image: jupyter/scipy-notebook:latest
-  #   container_name: jupyter
-  #   restart: unless-stopped
-  #   ports:
-  #     - "5200:8888"
-  #   volumes:
-  #     - /srv/dockerdata/jupyter:/home/jovyan:rw,z
-  #   environment:
-  #     - JUPYTER_ENABLE_LAB=yes
-  #     - JUPYTER_RUNTIME_DIR=/home/jovyan/.local/share/jupyter/runtime
-  #   group_add:
-  #     - users
-  #   networks:
-  #     - app-network
+  # --- JupyterLab Environment ---
+  jupyter:
+    image: jupyter/scipy-notebook:latest
+    container_name: jupyter
+    restart: unless-stopped
+    user: root
+    ports:
+      - "5200:8888"
+    volumes:
+      - /srv/dockerdata/jupyter:/home/jovyan:rw,z
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_RUNTIME_DIR=/home/jovyan/.local/share/jupyter/runtime
+      - CHOWN_HOME=yes
+      - CHOWN_HOME_OPTS=-R
+    group_add:
+      - users
 
   # --- memos ---
   memos:
