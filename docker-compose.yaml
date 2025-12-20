@@ -35,6 +35,8 @@ services:
     image: filebrowser/filebrowser:latest
     container_name: filebrowser
     restart: unless-stopped
+    security_opt:
+      - label=disable
     ports:
       - "7000:8080" # External:Internal (change 8081 if you want another port)
     volumes:
@@ -47,7 +49,15 @@ services:
       - TZ=America/New_York
       - FB_USERNAME=admin
       - FB_PASSWORD=strongpassword
-    command: ["--port", "8080"]
+    command:
+      [
+        "--port",
+        "8080",
+        "--database",
+        "/database/filebrowser.db",
+        "--config",
+        "/config/settings.json",
+      ]
 
   actualbudget:
     image: actualbudget/actual-server:latest
@@ -212,5 +222,6 @@ volumes:
 #podman exec -it wireguard /app/show-peer 1
 #
 # sudo chown -hR 1000:1000 /srv/dockerdata/actualbudget
+# sudo chcon -Rt container_file_t /srv/dockerdata/filebrowser
 
 # docker-compose down && docker-compose up -d
