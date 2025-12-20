@@ -8,7 +8,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /home/omkara/dockerdata/homepage/:/app/config:rw,z
+      - /srv/dockerdata/homepage/:/app/config:rw,z
     environment:
       - HOMEPAGE_ALLOWED_HOSTS=192.168.1.252,localhost,192.168.1.252:3000
 
@@ -27,8 +27,8 @@ services:
       - "3478:3478/udp"
       - "50000-50100:50000-50100/udp"
     volumes:
-      - /home/omkara/dockerdata/agentdvr/config:/AgentDVR/Media/XML:rw,z
-      - /home/omkara/dockerdata/agentdvr/media:/AgentDVR/Media/WebServerRoot/Media:rw,z
+      - /srv/dockerdata/agentdvr/config:/AgentDVR/Media/XML:rw,z
+      - /srv/dockerdata/agentdvr/media:/AgentDVR/Media/WebServerRoot/Media:rw,z
 
   #  --- File Manager ---
   filebrowser:
@@ -38,9 +38,9 @@ services:
     ports:
       - "7000:8080" # External:Internal (change 8081 if you want another port)
     volumes:
-      - /home/omkara/:/srv:ro # The directory you want to browse
-      - /home/omkara/dockerdata/filebrowser/config:/config:Z # Config storage
-      - /home/omkara/dockerdata/filebrowser/database:/database:Z # Database storage
+      - /home/:/srv:ro # The directory you want to browse
+      - /srv/dockerdata/filebrowser/config:/config:Z # Config storage
+      - /srv/dockerdata/filebrowser/database:/database:Z # Database storage
     environment:
       - PUID=1000
       - PGID=1000
@@ -56,7 +56,7 @@ services:
     ports:
       - "5020:5006"
     volumes:
-      - /home/omkara/dockerdata/actualbudget:/root/.actual:z
+      - /srv/dockerdata/actualbudget:/data:Z
     environment:
       - ACTUAL_PORT=5006
       - TZ=America/New_York
@@ -69,7 +69,7 @@ services:
     ports:
       - "9100:9090"
     volumes:
-      - /home/omkara/dockerdata/linkding:/etc/linkding/data:rw,z
+      - /srv/dockerdata/linkding:/etc/linkding/data:rw,z
     environment:
       - LD_SUPERUSER_NAME=admin
       - LD_SUPERUSER_PASSWORD='password'
@@ -83,7 +83,7 @@ services:
   #   ports:
   #     - "5200:8888"
   #   volumes:
-  #     - /home/omkara/dockerdata/jupyter:/home/jovyan:rw,z
+  #     - /srv/dockerdata/jupyter:/home/jovyan:rw,z
   #   environment:
   #     - JUPYTER_ENABLE_LAB=yes
   #     - JUPYTER_RUNTIME_DIR=/home/jovyan/.local/share/jupyter/runtime
@@ -99,7 +99,7 @@ services:
     ports:
       - "5400:5230"
     volumes:
-      - /home/omkara/dockerdata/memos:/var/opt/memos:rw,z
+      - /srv/dockerdata/memos:/var/opt/memos:rw,z
     restart: unless-stopped
 
   # --- bentopdf ---
@@ -107,26 +107,29 @@ services:
     image: bentopdf/bentopdf:latest
     container_name: bentopdf
     volumes:
-      - /home/omkara/dockerdata/bentopdf/cache:/var/cache/nginx:z
-      - /home/omkara/dockerdata/bentopdf/tmp:/etc/nginx/tmp:z
-      - /home/omkara/dockerdata/bentopdf/run:/run:z
-      - /home/omkara/dockerdata/bentopdf/nginx.conf:/etc/nginx/nginx.conf:z
+      - /srv/dockerdata/bentopdf/cache:/var/cache/nginx:z
+      - /srv/dockerdata/bentopdf/tmp:/etc/nginx/tmp:z
+      - /srv/dockerdata/bentopdf/run:/run:z
+      - /srv/dockerdata/bentopdf/nginx.conf:/etc/nginx/nginx.conf:z
     ports:
       - "5500:8080"
     restart: unless-stopped
 
-  # --- audiobookshelf ---
-  audiobookshelf:
-    image: ghcr.io/advplyr/audiobookshelf:latest
-    container_name: audiobookshelf
-    ports:
-      - 9200:80 # External port 13378 maps to internal port 80
-    volumes:
-      - /home/omkara/dockerdata/audiobookshelf/:/audiobooks:rw,z
-      - /home/omkara/dockerdata/audiobookshelf/:/podcasts:rw,z
-      - /home/omkara/dockerdata/audiobookshelf/:/metadata:rw,z
-      - /home/omkara/dockerdata/audiobookshelf/:/config:rw,z
+  # --- navidrome ---
+  navidrome:
+    image: deluan/navidrome:latest
+    container_name: navidrome
     restart: unless-stopped
+    ports:
+      - "9200:4533"
+    environment:
+      ND_SCANSCHEDULE: "1h"
+      ND_LOGLEVEL: "info"
+      ND_SESSIONTIMEOUT: "24h"
+      ND_BASEURL: ""
+    volumes:
+      - /srv/dockerdata/navidrome/data:/data:Z
+      - /srv/dockerdata/navidrome/music:/music:Z
 
   # wireguard:
   #   image: lscr.io/linuxserver/wireguard:latest
@@ -147,7 +150,7 @@ services:
   #     - INTERNAL_SUBNET=10.8.1.1
   #     - ALLOWEDIPS=0.0.0.0/0,192.168.1.0/24
   #   volumes:
-  #     - /home/omkara/dockerdata/wireguard:/config:Z
+  #     - /srv/dockerdata/wireguard:/config:Z
   #     - /lib/modules:/lib/modules:ro
   #   restart: always
 
@@ -190,7 +193,7 @@ services:
       NOIP_PASSWORD: 4ZXCcjj2ZUyX
       NOIP_HOSTNAMES: omkara.ddns.net
     volumes:
-      - /home/omkara/dockerdata/noip:/data:z
+      - /srv/dockerdata/noip:/data:z
 # --- Named Volumes ---
 volumes:
   npm_data: {}
@@ -201,10 +204,12 @@ volumes:
 #     updated_time = extract(epoch from now())*1000
 # WHERE email = 'admin@localhost'; admin@example.com e+<7sVg.BR
 
-#docker run --rm -v /home/omkara/dockerdata/filebrowser/database:/database \
+#docker run --rm -v /srv/dockerdata/filebrowser/database:/database \
 # filebrowser/filebrowser:latest \
 # users update admin --password strongpassword --database /database/filebrowser.db
 
 #podman exec -it wireguard /app/show-peer 1
+#
+# sudo chown -hR 1000:1000 /srv/dockerdata/actualbudget
 
 # docker-compose down && docker-compose up -d
