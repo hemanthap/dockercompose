@@ -13,22 +13,22 @@ services:
       - HOMEPAGE_ALLOWED_HOSTS=192.168.1.252,localhost,192.168.1.252:3000
 
   # # --- Surveillance DVR ---
-  # agentdvr:
-  #   image: mekayelanik/ispyagentdvr:latest
-  #   container_name: agentdvr
-  #   restart: unless-stopped
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=America/New_York
-  #     - AGENTDVR_WEBUI_PORT=8090
-  #   ports:
-  #     - "8090:8090"
-  #     - "3478:3478/udp"
-  #     - "50000-50100:50000-50100/udp"
-  #   volumes:
-  #     - /srv/dockerdata/agentdvr/config:/AgentDVR/Media/XML:rw,z
-  #     - /srv/dockerdata/agentdvr/media:/AgentDVR/Media/WebServerRoot/Media:rw,z
+  agentdvr:
+    image: mekayelanik/ispyagentdvr:latest
+    container_name: agentdvr
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - AGENTDVR_WEBUI_PORT=8090
+    ports:
+      - "8090:8090"
+      - "3478:3478/udp"
+      - "50000-50100:50000-50100/udp"
+    volumes:
+      - /srv/dockerdata/agentdvr/config:/AgentDVR/Media/XML:rw,z
+      - agentdvr_data:/AgentDVR/Media/WebServerRoot/Media:rw,z
 
   #  --- File Manager ---
   filebrowser:
@@ -94,12 +94,12 @@ services:
     ports:
       - "5200:8888"
     volumes:
-      - /srv/dockerdata/jupyter:/home/jovyan:rw,z
+      - /srv/dockerdata/jupyter:/home/jovyan:rw,Z
     environment:
       - JUPYTER_ENABLE_LAB=yes
-      - JUPYTER_RUNTIME_DIR=/home/jovyan/.local/share/jupyter/runtime
-      - CHOWN_HOME=yes
-      - CHOWN_HOME_OPTS=-R
+      # - JUPYTER_RUNTIME_DIR=/home/jovyan/.local/share/jupyter/runtime
+      # - CHOWN_HOME=yes
+      # - CHOWN_HOME_OPTS=-R
     group_add:
       - users
 
@@ -211,9 +211,10 @@ services:
 volumes:
   npm_data: {}
   npm_letsencrypt: {}
-  bentopdf_cache:
-  bentopdf_tmp:
-  bentopdf_run:
+  bentopdf_cache: {}
+  bentopdf_tmp: {}
+  bentopdf_run: {}
+  agentdvr_data: {}
 
 #UPDATE users
 # SET password = '$2y$04$ozPQcHvd8uvEYL9g4Baylu0Kf31TCb9DyxNcZMOkxZlbfBhHuOqDO', --password
