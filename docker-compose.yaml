@@ -219,19 +219,19 @@ services:
       - WATCHTOWER_POLL_INTERVAL=36000
       - WATCHTOWER_LABEL_ENABLE=true
 
-  noip:
-    image: ghcr.io/noipcom/noip-duc:latest
-    container_name: noip
-    restart: unless-stopped
-    environment:
-      NOIP_USERNAME: vngnq4h
-      NOIP_PASSWORD: 4ZXCcjj2ZUyX
-      NOIP_HOSTNAMES: omkara.ddns.net
-      NOIP_PING_INTERVAL: 3600
-    volumes:
-      - /srv/dockerdata/noip:/data:z
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
+  # noip:
+  #   image: ghcr.io/noipcom/noip-duc:latest
+  #   container_name: noip
+  #   restart: unless-stopped
+  #   environment:
+  #     NOIP_USERNAME: vngnq4h
+  #     NOIP_PASSWORD: 4ZXCcjj2ZUyX
+  #     NOIP_HOSTNAMES: omkara.ddns.net
+  #     NOIP_PING_INTERVAL: 3600
+  #   volumes:
+  #     - /srv/dockerdata/noip:/data:z
+  #   labels:
+  #     - "com.centurylinklabs.watchtower.enable=true"
 
 # --- Named Volumes ---
 volumes:
