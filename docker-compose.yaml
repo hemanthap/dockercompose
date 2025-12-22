@@ -102,8 +102,8 @@ services:
     volumes:
       # Map the work folder specifically
       - /srv/dockerdata/jupyter/work:/home/jovyan/work:rw,Z
-      # Change this to a local host folder instead of a named volume to fix permissions easily
-      - /srv/dockerdata/jupyter/config:/home/jovyan/.local:rw,Z
+      - jupyter_data:/home/jovyan/.local:rw,Z
+      # - /srv/dockerdata/jupyter/config:/home/jovyan/.local:rw,Z
     security_opt:
       - label:disable
 
