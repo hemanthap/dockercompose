@@ -194,16 +194,20 @@ services:
       retries: 3
 
   # # --- Auto Updater ---
-  # watchtower:
-  #   image: containrrr/watchtower
-  #   container_name: watchtower
-  #   restart: always
-  #   volumes:
-  #     - /run/user/1000/podman/podman.sock:/var/run/docker.sock:rw,z
-  #   environment:
-  #     - WATCHTOWER_CLEANUP=true
-  #     - WATCHTOWER_POLL_INTERVAL=36000 # every 5 min
-  #     - WATCHTOWER_LABEL_ENABLE=true
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: always
+    group_add:
+      - keep-groups # This allows the container to inherit your user's group permissions
+    security_opt:
+      - label=disable
+    volumes:
+      - /run/user/1000/podman/podman.sock:/var/run/docker.sock:rw
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=36000
+      - WATCHTOWER_LABEL_ENABLE=true
 
   noip:
     image: ghcr.io/noipcom/noip-duc:latest
