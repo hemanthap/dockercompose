@@ -10,9 +10,12 @@ services:
     volumes:
       - /srv/dockerdata/homepage/:/app/config:rw,z
     environment:
-      - HOMEPAGE_ALLOWED_HOSTS=192.168.1.252,localhost,192.168.1.252:3000
+      # - HOMEPAGE_ALLOWED_HOSTS=localhost,192.168.1.252,100.70.165.82,fedora-server.tail359ab2.ts.net
+      - HOMEPAGE_ALLOWED_HOSTS=*
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
-  # # --- Surveillance DVR ---
+  # --- Surveillance DVR ---
   agentdvr:
     image: mekayelanik/ispyagentdvr:latest
     container_name: agentdvr
@@ -29,6 +32,8 @@ services:
     volumes:
       - /srv/dockerdata/agentdvr/config:/AgentDVR/Media/XML:rw,z
       - agentdvr_data:/AgentDVR/Media/WebServerRoot/Media:rw,z
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   #  --- File Manager ---
   filebrowser:
@@ -63,6 +68,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 3
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   actualbudget:
     image: actualbudget/actual-server:latest
@@ -75,6 +82,8 @@ services:
     environment:
       - ACTUAL_PORT=5006
       - TZ=America/New_York
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   # --- Bookmark Manager ---
   linkding:
@@ -89,6 +98,8 @@ services:
       - LD_SUPERUSER_NAME=admin
       - LD_SUPERUSER_PASSWORD='password'
       - LD_ALLOWED_HOSTS=192.168.1.252,localhost
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   # --- JupyterLab Environment ---
   jupyter:
@@ -105,12 +116,12 @@ services:
     ports:
       - "5200:8888"
     volumes:
-      # Map the work folder specifically
       - /srv/dockerdata/jupyter/work:/home/jovyan/work:rw,Z
       - jupyter_data:/home/jovyan/.local:rw,Z
-      # - /srv/dockerdata/jupyter/config:/home/jovyan/.local:rw,Z
     security_opt:
       - label:disable
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   # --- memos ---
   memos:
@@ -121,6 +132,8 @@ services:
     volumes:
       - /srv/dockerdata/memos:/var/opt/memos:rw,z
     restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   # --- bentopdf ---
   bentopdf:
@@ -135,6 +148,8 @@ services:
     ports:
       - "5500:8080"
     restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   # --- navidrome ---
   navidrome:
@@ -151,29 +166,24 @@ services:
     volumes:
       - /srv/dockerdata/navidrome/data:/data:Z
       - /srv/dockerdata/navidrome/music:/music:Z
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
-  # wireguard:
-  #   image: lscr.io/linuxserver/wireguard:latest
-  #   container_name: wireguard
-  #   network_mode: host
-  #   cap_add:
-  #     - NET_ADMIN
-  #     - SYS_MODULE
-  #     - NET_RAW
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Etc/UTC
-  #     - SERVERURL=omkara.ddns.net
-  #     - SERVERPORT=51820
-  #     - PEERS=1
-  #     - PEERDNS=auto
-  #     - INTERNAL_SUBNET=10.8.1.1
-  #     - ALLOWEDIPS=0.0.0.0/0,192.168.1.0/24
-  #   volumes:
-  #     - /srv/dockerdata/wireguard:/config:Z
-  #     - /lib/modules:/lib/modules:ro
-  #   restart: always
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: tailscale
+    hostname: fedora-server
+    network_mode: "host"
+    environment:
+      - TS_AUTHKEY=tskey-auth-kB9im9VtLC21CNTRL-yWBVc9PDkWfy3x9gb4RDXfo4WpV6ro7Vf
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=true # Key change for rootless
+      - TS_ROUTES=192.168.1.0/24 # Replace with your actual home network range
+    volumes:
+      - /srv/dockerdata/tailscale:/var/lib/tailscale:Z
+    restart: unless-stopped
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
 
   # --- Reverse Proxy / SSL ---
   npm:
@@ -220,6 +230,9 @@ services:
       NOIP_PING_INTERVAL: 3600
     volumes:
       - /srv/dockerdata/noip:/data:z
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
 # --- Named Volumes ---
 volumes:
   npm_data: {}
