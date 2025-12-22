@@ -91,21 +91,19 @@ services:
     container_name: jupyter
     restart: unless-stopped
     user: root
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - NB_UID=1000
+      - NB_GID=1000
+      - CHOWN_HOME=yes # Switch back to yes, but only after fixing the volume mapping
+      - CHOWN_HOME_OPTS=-R
     ports:
       - "5200:8888"
     volumes:
-      # 1. Map host folder to a neutral top-level directory
-      - /srv/dockerdata/jupyter/work:/work:rw
-      # 2. Map home to a named volume (keeps .local and .jupyter safe)
-      - jupyter_data:/home/jovyan:rw
-    environment:
-      - JUPYTER_ENABLE_LAB=yes
-      # 3. Tell Jupyter to start looking in /work instead of home
-      - JUPYTER_SERVER_APP_ROOT_DIR=/work
-      - CHOWN_HOME=yes
-      - CHOWN_HOME_OPTS=-R
-    group_add:
-      - users
+      # Map the work folder specifically
+      - /srv/dockerdata/jupyter/work:/home/jovyan/work:rw,Z
+      # Change this to a local host folder instead of a named volume to fix permissions easily
+      - /srv/dockerdata/jupyter/config:/home/jovyan/.local:rw,Z
     security_opt:
       - label:disable
 
